@@ -1,4 +1,4 @@
-#Huffman coding
+# Huffman coding
 
 This is an implementation based on the wiki page of the algorithm.
 For learning and demonstrating purposes.
