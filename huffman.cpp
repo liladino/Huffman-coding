@@ -35,10 +35,10 @@ public:
 		if (word.size() != other.word.size()) return word.size() < other.word.size();
 		for (size_t i = 0; i < min(word.size(), other.word.size()); i++){
 			if ((int)word[i] < (int)other.word[i]){
-				return true;
+				return false;
 			}
 			else if ((int)word[i] > (int)other.word[i]){
-				return false;
+				return true;
 			}
 		}
 		return false;
@@ -170,9 +170,13 @@ int main() {
 	map<CodeWord, char> decodeTable;
 	makeCodeTables(encodeTable, decodeTable, root);
 	
-	cout << "char\tfreq\tcodeword" << endl;
-	for (const auto& x : encodeTable){	
-		cout << "'" << x.first << "'\t" << (find_if(v.begin(), v.end(), [&x](const pair<char, int>& p) { return p.first == x.first;}))->second << "\t" << x.second << endl;
+	cout << "char    freq        codeword" << endl;
+	
+	double sum = 0;
+	for_each(v.begin(), v.end(), [&sum](const pair<char, int>& p) {sum += p.second;});
+	for (const auto& x : decodeTable){	
+		cout << "'" << x.second << "'     ";
+		cout << fixed << setprecision(6) << ((find_if(v.begin(), v.end(), [&x](const pair<char, int>& p) { return p.first == x.second;}))->second)/sum << "    " << x.first << endl;
 	}
 	
 	//~ for (const auto& x : decodeTable){
