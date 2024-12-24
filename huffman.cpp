@@ -81,11 +81,12 @@ struct NodeUPtrCmp{
 };
 
 void setNumberOfChars(const string& s, vector<pair<char, int>>& v){
-	int freqOfChars[128] = {0};
-	for (unsigned c : s){
-		freqOfChars[c]++;
+	int freqOfChars[256] = {0};
+	for (size_t i = 0; i < s.size(); i++){
+		unsigned char c = s[i];
+		freqOfChars[(size_t)c]++;
 	}
-	for (int i = 0; i < 128; i++){
+	for (int i = 0; i < 256; i++){
 		if (freqOfChars[i]) {
 			v.push_back(std::make_pair(i, freqOfChars[i]));
 		}
@@ -118,16 +119,21 @@ void traverseHuffmanTree(map<char, CodeWord>& encodeTable, map<CodeWord, char>& 
 	}
 	CodeWord left(c);
 	CodeWord right(c);
-	left.append(false);
-	right.append(true);
+	left.append(0);
+	right.append(1);
 	
 	traverseHuffmanTree(encodeTable, decodeTable, root->leftchild, left);
 	traverseHuffmanTree(encodeTable, decodeTable, root->rightchild, right);
 }
 
 void makeCodeTables(map<char, CodeWord>& encodeTable, map<CodeWord, char>& decodeTable, unique_ptr<Node>& root){
-	CodeWord left(false);
-	CodeWord right(true);
+	if (root->isLeaf()){
+		encodeTable[root->character] = 0;
+		decodeTable[0] = root->character;
+		return;
+	}
+	CodeWord left(0);
+	CodeWord right(1);
 	
 	traverseHuffmanTree(encodeTable, decodeTable, root->leftchild, left);
 	traverseHuffmanTree(encodeTable, decodeTable, root->rightchild, right);
@@ -145,9 +151,8 @@ void encode(const string& s, map<char, CodeWord>& encodeTable, vector<bool>& res
 void decode(vector<bool>& encodedString, map<CodeWord, char>& decodeTable, string& s){
 	if (encodedString.size() < 1) return;
 	CodeWord temp;
-	for (size_t i = 0; i <= encodedString.size(); i++){
+	for (size_t i = 0; i < encodedString.size(); i++){
 		temp.append(encodedString[i]);
-		//~ cout << temp << " ";
 		
 		if (decodeTable.count(temp)){
 			s += decodeTable[temp];
@@ -157,9 +162,19 @@ void decode(vector<bool>& encodedString, map<CodeWord, char>& decodeTable, strin
 }
 
 int main() {
-	string s = "Bus duledekeiden, Husztnak romvara megallek;\nCsend vala, felleg alol szallt fel az ejjeli hold.\nSzel kele most, mint sir szele kel; s a csarnok elontott\nOszlopi kozt lebego remalak inte felem.\nEs mond: Honfi, mit er epedo kebel e romok orman?\nRegi kor arnya fele visszamerengni mit er?\nMessze jovendovel komolyan vess ossze jelnkort;\nHass, alkoss, gyarapits; s a haza fenyre derul!";
+	string s;// = "Bus duledekeiden, Husztnak romvara megallek;\nCsend vala, felleg alol szallt fel az ejjeli hold.\nSzel kele most, mint sir szele kel; s a csarnok elontott\nOszlopi kozt lebego remalak inte felem.\nEs mond: Honfi, mit er epedo kebel e romok orman?\nRegi kor arnya fele visszamerengni mit er?\nMessze jovendovel komolyan vess ossze jelnkort;\nHass, alkoss, gyarapits; s a haza fenyre derul!";
 	
-	cout << "Original text:\n\n" << s << endl << endl;
+	{
+		char c;
+		while (cin >> noskipws >> c){s += c;}
+	}
+	
+	if (s.size() < 1) {
+		cout << "Not text, nothing to compress" << endl;
+		return 0;
+	}
+
+	cout << "Original text:\n\n" << s;
 	
 	vector<pair<char, int>> v;
 	setNumberOfChars(s, v);
@@ -170,7 +185,7 @@ int main() {
 	map<CodeWord, char> decodeTable;
 	makeCodeTables(encodeTable, decodeTable, root);
 	
-	cout << "char    freq        codeword" << endl;
+	cout << "\n\nchar    freq        codeword" << endl;
 	
 	double sum = 0;
 	for_each(v.begin(), v.end(), [&sum](const pair<char, int>& p) {sum += p.second;});
@@ -178,10 +193,6 @@ int main() {
 		cout << "'" << x.second << "'     ";
 		cout << fixed << setprecision(6) << ((find_if(v.begin(), v.end(), [&x](const pair<char, int>& p) { return p.first == x.second;}))->second)/sum << "    " << x.first << endl;
 	}
-	
-	//~ for (const auto& x : decodeTable){
-		//~ cout << x.first << "\t'" << x.second << "'" << endl;
-	//~ }
 	
 	vector<bool> enc;
 	encode(s, encodeTable, enc);
